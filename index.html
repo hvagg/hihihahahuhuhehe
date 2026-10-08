@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Góc Nhỏ Chào Mừng - Welcome</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts: VT323 (Pixel Title), Press Start 2P (Pixel UI), Be Vietnam Pro (Chuẩn tiếng Việt không lỗi dấu) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'soft-pink': '#fbcfe8',
+                        'soft-pink-dark': '#db2777',
+                        'mint-green': '#a7f3d0',
+                        'mint-dark': '#059669',
+                        'lemon-yellow': '#fef08a',
+                        'lemon-dark': '#ca8a04',
+                        'lavender': '#e9d5ff',
+                        'lavender-dark': '#9333ea',
+                        'pixel-dark': '#374151',
+                    },
+                    fontFamily: {
+                        'pixel-title': ['"VT323"', 'monospace'],
+                        'pixel-btn': ['"Press Start 2P"', 'monospace'],
+                        'pixel-body': ['"Be Vietnam Pro"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #fef08a;
+            background-image: 
+                radial-gradient(#fbcfe8 3px, transparent 3px), 
+                radial-gradient(#a7f3d0 3px, #fef08a 3px);
+            background-size: 32px 32px;
+            background-position: 0 0, 16px 16px;
+            color: #374151;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* Retro Pixel UI Border and Box Shadow */
+        .pixel-box {
+            background-color: #FFFFFF;
+            border: 4px solid #374151;
+            box-shadow: 6px 6px 0px 0px #374151;
+            image-rendering: pixelated;
+        }
+
+        .pixel-btn {
+            font-family: 'Press Start 2P', monospace;
+            border: 3px solid #374151;
+            box-shadow: 4px 4px 0px 0px #374151;
+            transition: all 0.1s ease;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .pixel-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px 0px #374151;
+        }
+
+        .pixel-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px 0px #374151;
+        }
+
+        .pixel-input {
+            border: 3px solid #374151;
+            outline: none;
+            box-shadow: inset 2px 2px 0px 0px rgba(0,0,0,0.1);
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float {
+            animation: float 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pixelPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .animate-pixel-pulse {
+            animation: pixelPulse 1.2s infinite;
+        }
+
+        /* Smooth Page Transition */
+        .page-step {
+            transition: opacity 0.35s ease-in-out, transform 0.35s ease-in-out;
+        }
+        .page-hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(15px);
+            display: none !important;
+        }
+        .page-visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+            display: flex !important;
+        }
+
+        /* Sparkles Canvas */
+        #fx-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 relative">
+
+    <canvas id="fx-canvas"></canvas>
+
+    <main class="w-full max-w-xl z-10">
+
+        <!-- ================= TRANG 1 ================= -->
+        <section id="page1" class="page-step page-visible flex-col items-center justify-center pixel-box p-6 md:p-8 rounded-none text-center bg-white">
+            <div class="text-4xl md:text-5xl mb-4 animate-float">👋 🎮</div>
+
+            <h1 id="greeting-title" class="font-pixel-title text-3xl md:text-4xl text-soft-pink-dark mb-2 leading-relaxed">
+                Xin chào <span id="title-user-name" class="text-lavender-dark">bạn</span>
+            </h1>
+
+            <p class="font-pixel-body text-lg md:text-xl text-pixel-dark mb-6 font-semibold">
+                Nhập tên của bạn vào đây nha:
+            </p>
+
+            <div class="w-full mb-6">
+                <input 
+                    type="text" 
+                    id="username-input" 
+                    placeholder="Tên của bạn..." 
+                    class="pixel-input font-pixel-body text-xl w-full px-4 py-3 text-center bg-lavender focus:bg-white text-pixel-dark rounded-none font-medium"
+                    maxlength="25"
+                    autocomplete="off"
+                />
+            </div>
+
+            <!-- Nút TIẾP THEO (Xuất hiện sau 2s kể từ khi kết thúc nhập) -->
+            <div id="next-btn-container" class="h-16 flex items-center justify-center opacity-0 transition-opacity duration-500">
+                <button 
+                    id="btn-to-page1_5" 
+                    class="pixel-btn bg-mint-green hover:bg-mint-dark hover:text-white text-[11px] md:text-xs px-6 py-3 text-pixel-dark rounded-none flex items-center gap-2"
+                >
+                    TIẾP THEO ➔
+                </button>
+            </div>
+        </section>
+
+
+        <!-- ================= TRANG 1.5 ================= -->
+        <section id="page1_5" class="page-step page-hidden flex-col items-center justify-center pixel-box p-6 md:p-8 rounded-none text-center bg-white">
+            <div class="text-4xl md:text-5xl mb-4 animate-float">✨ 💬 ✨</div>
+
+            <h2 id="greeting-interactive-text" class="font-pixel-body text-2xl md:text-3xl text-soft-pink-dark font-bold mb-8 leading-relaxed">
+                Chào bạn <span id="interact-user-name" class="text-lavender-dark underline">bạn</span>!
+            </h2>
+
+            <!-- 2 Lựa chọn Chào nha / Hello -->
+            <div class="flex flex-col sm:flex-row gap-4 w-full justify-center">
+                <button 
+                    id="btn-greet-chao" 
+                    class="pixel-btn bg-mint-green hover:bg-mint-dark hover:text-white text-[11px] md:text-xs px-6 py-4 text-pixel-dark rounded-none flex-1 flex items-center justify-center gap-2"
+                >
+                    CHÀO NHA 👋
+                </button>
+                <button 
+                    id="btn-greet-hello" 
+                    class="pixel-btn bg-lavender hover:bg-lavender-dark hover:text-white text-[11px] md:text-xs px-6 py-4 text-pixel-dark rounded-none flex-1 flex items-center justify-center gap-2"
+                >
+                    HELLO 🖐️
+                </button>
+            </div>
+        </section>
+
+
+        <!-- ================= TRANG 2 ================= -->
+        <section id="page2" class="page-step page-hidden flex-col items-center justify-center pixel-box p-6 md:p-8 rounded-none text-center bg-white">
+            <div class="text-4xl md:text-5xl mb-4 animate-float">📅 🤔 💭</div>
+
+            <h2 id="page2-dialogue" class="font-pixel-body text-xl md:text-2xl text-pixel-dark mb-8 leading-relaxed font-semibold">
+                Vậy là ngày 9/10 nhỉ?
+            </h2>
+
+            <!-- Lựa chọn YEAH / NAH -->
+            <div id="options-container" class="flex flex-col sm:flex-row gap-4 w-full justify-center">
+                <button 
+                    id="btn-yeah" 
+                    class="pixel-btn bg-mint-green hover:bg-mint-dark hover:text-white text-[11px] md:text-xs px-6 py-4 text-pixel-dark rounded-none flex-1 flex items-center justify-center gap-2"
+                >
+                    YEAH! 🎉
+                </button>
+                <button 
+                    id="btn-nah" 
+                    class="pixel-btn bg-soft-pink hover:bg-soft-pink-dark hover:text-white text-[11px] md:text-xs px-6 py-4 text-pixel-dark rounded-none flex-1 flex items-center justify-center gap-2"
+                >
+                    NAH 😅
+                </button>
+            </div>
+
+            <!-- Thông báo khi bấm NAH -->
+            <div id="nah-message" class="hidden mt-6 bg-lemon-yellow border-2 border-pixel-dark p-3 text-lg font-pixel-body font-semibold animate-pulse">
+                👀 Nên nhìn lại lịch nha!
+            </div>
+        </section>
+
+
+        <!-- ================= TRANG 3 ================= -->
+        <section id="page3" class="page-step page-hidden flex-col items-center justify-center pixel-box p-6 md:p-8 rounded-none text-center bg-white relative overflow-hidden">
+            <!-- Retro Decorative Corner Icons -->
+            <div class="absolute top-3 left-3 text-2xl animate-pixel-pulse">🎈</div>
+            <div class="absolute top-3 right-3 text-2xl animate-pixel-pulse">🎂</div>
+            
+            <!-- Isometric Caramel Pixel Cake Image -->
+            <div class="flex justify-center items-center my-2">
+                <img src="https://artr2.pixilart.com/cfr2243ffc22eeaws3.png" alt="Pixel Cake" class="animate-float max-w-[200px] h-auto" style="image-rendering: pixelated;">
+            </div>
+
+            <!-- Header Text Trang 3 -->
+            <h2 id="page3-title" class="font-pixel-body text-xl md:text-2xl text-soft-pink-dark font-bold my-4 leading-normal">
+                Nay sinh nhật bạn <span id="p3-user-name" class="underline text-lavender-dark">bạn</span> nhỉ, HVA có lời chúc bạn:
+            </h2>
+
+            <!-- Controls Audio Playback -->
+            <div class="mb-6 flex flex-wrap justify-center gap-3">
+                <button 
+                    id="btn-toggle-music" 
+                    class="pixel-btn bg-lemon-yellow hover:bg-lemon-dark hover:text-white text-[10px] md:text-xs px-4 py-3 text-pixel-dark rounded-none flex items-center gap-2"
+                >
+                    🎵 <span id="music-btn-text">Phát Nhạc CMSN</span>
+                </button>
+            </div>
+
+            <!-- Nút OK để chuyển sang Trang 4 -->
+            <button 
+                id="btn-to-page4" 
+                class="pixel-btn bg-mint-green hover:bg-mint-dark hover:text-white text-[11px] md:text-xs px-8 py-3 text-pixel-dark rounded-none animate-bounce"
+            >
+                OK ➔
+            </button>
+        </section>
+
+
+        <!-- ================= TRANG 4 ================= -->
+        <section id="page4" class="page-step page-hidden flex-col items-center justify-center pixel-box p-6 md:p-8 rounded-none text-left bg-white relative">
+            <div class="text-center w-full mb-4">
+                <span class="text-4xl animate-pixel-pulse inline-block">💌</span>
+            </div>
+
+            <!-- Dòng chúc 1 -->
+            <div class="bg-lavender/40 border-2 border-pixel-dark p-4 md:p-5 mb-4 w-full text-base md:text-lg font-pixel-body leading-relaxed text-pixel-dark font-medium">
+                <p id="wish-line1" class="min-h-[120px]"></p>
+            </div>
+
+            <!-- Dòng chúc 2 -->
+            <div id="wish-line2-box" class="hidden bg-soft-pink/40 border-2 border-pixel-dark p-4 md:p-5 mb-6 w-full text-base md:text-lg font-pixel-body leading-relaxed text-pixel-dark font-medium">
+                <p id="wish-line2"></p>
+            </div>
+
+            <!-- Nút QUAY LẠI BAN ĐẦU -->
+            <div class="text-center w-full mt-2">
+                <button 
+                    id="btn-restart" 
+                    class="pixel-btn bg-lemon-yellow hover:bg-lemon-dark hover:text-white text-[9px] md:text-[10px] px-6 py-3 text-pixel-dark rounded-none inline-flex items-center gap-2"
+                >
+                    🔄 QUAY LẠI BAN ĐẦU
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Application State
+        let userName = "";
+        let inputTimer = null;
+        let audioCtx = null;
+        let isMusicPlaying = false;
+        let audioNotesTimeouts = [];
+
+        // DOM Elements
+        const page1 = document.getElementById('page1');
+        const page1_5 = document.getElementById('page1_5');
+        const page2 = document.getElementById('page2');
+        const page3 = document.getElementById('page3');
+        const page4 = document.getElementById('page4');
+
+        const usernameInput = document.getElementById('username-input');
+        const titleUserName = document.getElementById('title-user-name');
+        const interactUserName = document.getElementById('interact-user-name');
+        const nextBtnContainer = document.getElementById('next-btn-container');
+        const btnToPage1_5 = document.getElementById('btn-to-page1_5');
+
+        const btnGreetChao = document.getElementById('btn-greet-chao');
+        const btnGreetHello = document.getElementById('btn-greet-hello');
+
+        const page2Dialogue = document.getElementById('page2-dialogue');
+        const btnYeah = document.getElementById('btn-yeah');
+        const btnNah = document.getElementById('btn-nah');
+        const optionsContainer = document.getElementById('options-container');
+        const nahMessage = document.getElementById('nah-message');
+
+        const p3UserName = document.getElementById('p3-user-name');
+        const btnToggleMusic = document.getElementById('btn-toggle-music');
+        const musicBtnText = document.getElementById('music-btn-text');
+        const btnToPage4 = document.getElementById('btn-to-page4');
+
+        const wishLine1 = document.getElementById('wish-line1');
+        const wishLine2Box = document.getElementById('wish-line2-box');
+        const wishLine2 = document.getElementById('wish-line2');
+        const btnRestart = document.getElementById('btn-restart');
+
+        // Page Switcher
+        function switchPage(fromPage, toPage) {
+            fromPage.classList.remove('page-visible');
+            fromPage.classList.add('page-hidden');
+            
+            setTimeout(() => {
+                toPage.classList.remove('page-hidden');
+                toPage.classList.add('page-visible');
+            }, 350);
+        }
+
+        // ================= PAGE 1 =================
+        usernameInput.addEventListener('input', (e) => {
+            userName = e.target.value.trim();
+            titleUserName.textContent = userName || "bạn";
+
+            if (inputTimer) clearTimeout(inputTimer);
+
+            if (userName.length === 0) {
+                nextBtnContainer.classList.add('opacity-0');
+                nextBtnContainer.classList.remove('opacity-100');
+                return;
+            }
+
+            // Đợi 2 giây sau khi kết thúc gõ để hiện nút TIẾP THEO
+            inputTimer = setTimeout(() => {
+                if (userName.length > 0) {
+                    nextBtnContainer.classList.remove('opacity-0');
+                    nextBtnContainer.classList.add('opacity-100');
+                    playPixelSound(600, 'sine', 0.1);
+                }
+            }, 2000);
+        });
+
+        // Chuyển sang Trang 1.5
+        btnToPage1_5.addEventListener('click', () => {
+            if (!userName) userName = "bạn";
+            playPixelSound(800, 'square', 0.15);
+            interactUserName.textContent = userName;
+            switchPage(page1, page1_5);
+        });
+
+        // ================= TRANG 1.5 =================
+        function handleGreetingChoice() {
+            playPixelSound(850, 'triangle', 0.15);
+            page2Dialogue.textContent = `Vậy là ngày 9/10 nhỉ?`;
+            switchPage(page1_5, page2);
+        }
+
+        btnGreetChao.addEventListener('click', handleGreetingChoice);
+        btnGreetHello.addEventListener('click', handleGreetingChoice);
+
+        // ================= PAGE 2 =================
+        btnYeah.addEventListener('click', () => {
+            playPixelSound(1000, 'triangle', 0.2);
+            p3UserName.textContent = userName || "bạn";
+            switchPage(page2, page3);
+            
+            // Auto start happy birthday tune on Page 3
+            setTimeout(() => {
+                startHappyBirthdayTune();
+                triggerConfetti();
+            }, 400);
+        });
+
+        btnNah.addEventListener('click', () => {
+            playPixelSound(300, 'sawtooth', 0.2);
+            
+            // Hide choice buttons
+            optionsContainer.classList.add('hidden');
+            // Show alert message
+            nahMessage.classList.remove('hidden');
+
+            // Sau 3 giây, mở lại 2 lựa chọn để chọn lại
+            setTimeout(() => {
+                nahMessage.classList.add('hidden');
+                optionsContainer.classList.remove('hidden');
+            }, 3000);
+        });
+
+        // ================= PAGE 3 =================
+        btnToggleMusic.addEventListener('click', () => {
+            if (isMusicPlaying) {
+                stopHappyBirthdayTune();
+            } else {
+                startHappyBirthdayTune();
+            }
+        });
+
+        btnToPage4.addEventListener('click', () => {
+            playPixelSound(900, 'square', 0.15);
+            switchPage(page3, page4);
+            setTimeout(startPage4WishAnimation, 500);
+        });
+
+        // ================= PAGE 4 =================
+        function startPage4WishAnimation() {
+            wishLine1.textContent = "";
+            wishLine2.textContent = "";
+            wishLine2Box.classList.add('hidden');
+
+            const text1 = `thứ nhất HVA chúc mừng sinh nhật bạn nha! Tuổi 18 mong bạn sẽ đạt được thành tữu và kiên định bước trên con đường ${userName || "bạn"} đang bước đi. bên cạnh đó,( có lẽ cái này sẽ hơi cổ và khó để phù hợp cho người con gái hiện đại), có 4 chữ dành cho người con gái: Công-Dung-Ngôn-Hạnh, mong cho chữ dung của bạn ngày càng kiêu sa, tuyệt trần nhá!`;
+            
+            const text2 = `cảm ơn bạn đã làm beta tester cho HVA nha! Chửi HVA đầu toàn điện là sau ăn ĐẤM.`;
+
+            // Typewriter effect for text 1
+            typeWriter(wishLine1, text1, 25, () => {
+                // Sau 1 giây hiện tiếp dòng chữ 2
+                setTimeout(() => {
+                    wishLine2Box.classList.remove('hidden');
+                    typeWriter(wishLine2, text2, 30, () => {
+                        triggerConfetti();
+                    });
+                }, 1000);
+            });
+        }
+
+        function typeWriter(element, text, speed, callback) {
+            let i = 0;
+            function type() {
+                if (i < text.length) {
+                    element.textContent += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                } else if (callback) {
+                    callback();
+                }
+            }
+            type();
+        }
+
+        // Reset & Return to Page 1
+        btnRestart.addEventListener('click', () => {
+            playPixelSound(500, 'sine', 0.2);
+            stopHappyBirthdayTune();
+
+            // Reset inputs
+            usernameInput.value = "";
+            userName = "";
+            titleUserName.textContent = "bạn";
+            nextBtnContainer.classList.add('opacity-0');
+
+            switchPage(page4, page1);
+        });
+
+
+        // ================= WEB AUDIO API SYNTHESIZER =================
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playPixelSound(freq, type = 'square', duration = 0.1) {
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = type;
+                osc.frequency.value = freq;
+
+                gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start();
+                osc.stop(ctx.currentTime + duration);
+            } catch (e) {
+                console.log("Audio play blocked", e);
+            }
+        }
+
+        function startHappyBirthdayTune() {
+            stopHappyBirthdayTune();
+            isMusicPlaying = true;
+            musicBtnText.textContent = "Tắt Nhạc CMSN";
+
+            const ctx = getAudioContext();
+            
+            // Happy Birthday 8-Bit Chiptune Notes
+            const notes = [
+                { note: 261.63, duration: 0.35 }, { note: 261.63, duration: 0.25 },
+                { note: 293.66, duration: 0.6 },  { note: 261.63, duration: 0.6 },
+                { note: 349.23, duration: 0.6 },  { note: 329.63, duration: 1.0 },
+
+                { note: 261.63, duration: 0.35 }, { note: 261.63, duration: 0.25 },
+                { note: 293.66, duration: 0.6 },  { note: 261.63, duration: 0.6 },
+                { note: 392.00, duration: 0.6 },  { note: 349.23, duration: 1.0 },
+
+                { note: 261.63, duration: 0.35 }, { note: 261.63, duration: 0.25 },
+                { note: 523.25, duration: 0.6 },  { note: 440.00, duration: 0.6 },
+                { note: 349.23, duration: 0.6 },  { note: 329.63, duration: 0.6 },
+                { note: 293.66, duration: 0.8 },
+
+                { note: 466.16, duration: 0.35 }, { note: 466.16, duration: 0.25 },
+                { note: 440.00, duration: 0.6 },  { note: 349.23, duration: 0.6 },
+                { note: 392.00, duration: 0.6 },  { note: 349.23, duration: 1.2 }
+            ];
+
+            let cumulativeTime = 0;
+
+            notes.forEach((n) => {
+                const timer = setTimeout(() => {
+                    if (!isMusicPlaying) return;
+                    playPixelSound(n.note, 'triangle', n.duration);
+                }, cumulativeTime * 1000);
+
+                audioNotesTimeouts.push(timer);
+                cumulativeTime += n.duration;
+            });
+
+            const loopTimer = setTimeout(() => {
+                if (isMusicPlaying) {
+                    startHappyBirthdayTune();
+                }
+            }, cumulativeTime * 1000 + 500);
+
+            audioNotesTimeouts.push(loopTimer);
+        }
+
+        function stopHappyBirthdayTune() {
+            isMusicPlaying = false;
+            musicBtnText.textContent = "Phát Nhạc CMSN";
+            audioNotesTimeouts.forEach(timer => clearTimeout(timer));
+            audioNotesTimeouts = [];
+        }
+
+
+        // ================= CELEBRATION & PARTICLES =================
+        function triggerConfetti() {
+            const count = 180;
+            const defaults = {
+                origin: { y: 0.7 },
+                colors: ['#fbcfe8', '#a7f3d0', '#fef08a', '#e9d5ff']
+            };
+
+            function fire(particleRatio, opts) {
+                confetti(Object.assign({}, defaults, opts, {
+                    particleCount: Math.floor(count * particleRatio)
+                }));
+            }
+
+            fire(0.25, { spread: 26, startVelocity: 55 });
+            fire(0.2, { spread: 60 });
+            fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+            fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+            
+            spawnFloatingPixelParticles();
+        }
+
+        const canvas = document.getElementById('fx-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function spawnFloatingPixelParticles() {
+            const symbols = ['🌸', '✨', '🎈', '💖', '⭐', '🎂'];
+            for (let i = 0; i < 25; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: canvas.height + Math.random() * 80,
+                    size: Math.random() * 16 + 16,
+                    speedY: Math.random() * 2 + 1,
+                    speedX: (Math.random() - 0.5) * 1.5,
+                    symbol: symbols[Math.floor(Math.random() * symbols.length)],
+                    opacity: 1
+                });
+            }
+        }
+
+        function renderParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                let p = particles[i];
+                ctx.font = `${p.size}px monospace`;
+                ctx.globalAlpha = p.opacity;
+                ctx.fillText(p.symbol, p.x, p.y);
+
+                p.y -= p.speedY;
+                p.x += p.speedX;
+
+                if (p.y < -50) {
+                    p.y = canvas.height + 20;
+                    p.x = Math.random() * canvas.width;
+                }
+            }
+            requestAnimationFrame(renderParticles);
+        }
+        renderParticles();
+
+    </script>
+</body>
+</html>
